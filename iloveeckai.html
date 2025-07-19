@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>happiest birthday, my love! ❤️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Dancing+Script:wght@700&family=Rustic+Roadway&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0e6e6 0%, #e0e0e0 100%); /* soft, slightly textured background */
+            display: flex;
+            flex-direction: column; /* main container is column for header, main, footer */
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden; /* prevent horizontal scrolling */
+            position: relative;
+        }
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ffb3d9; /* pink */
+            border-radius: 50%;
+            opacity: 0;
+            animation: confetti-fall linear infinite;
+        }
+        .confetti:nth-child(2n) { background-color: #ffd9e6; } /* lighter pink */
+        .confetti:nth-child(3n) { background-color: #ff8cbe; } /* deeper pink */
+        .confetti:nth-child(4n) { background-color: #ffa0cb; } /* medium pink */
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0.8; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* polaroid specific styling - more rustic/scrappy */
+        .polaroid {
+            background-color: white;
+            padding: 0.75rem 0.75rem 2rem 0.75rem; /* classic polaroid border */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* more pronounced shadow for depth */
+            border-radius: 0.5rem; /* sharper corners for a more 'cut-out' look */
+            transition: transform 0.3s ease-in-out;
+            margin: 0.75rem; /* increased margin for spacing */
+            border: 1px solid #d4d4d4; /* subtle grey border */
+            transform: rotate(calc((var(--rotation-deg) * 1deg) - 3deg)); /* dynamic and more varied rotation */
+            display: inline-block; /* allows rotation and spacing */
+        }
+        .polaroid:nth-child(even) { /* alternate rotations */
+            transform: rotate(calc((var(--rotation-deg) * 1deg) + 3deg));
+        }
+        .polaroid:hover {
+            transform: scale(1.08) rotate(0deg) !important; /* straighten and enlarge on hover */
+            z-index: 5; /* bring to front on hover */
+        }
+        .polaroid img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 0.25rem;
+        }
+
+        /* common styles for message sections (content areas) - resembling paper cutouts */
+        .content-section {
+            /* Now handled by JS to toggle display and active class */
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden; /* Important for hiding content during collapse */
+            display: block; /* Allows max-height transition to work initially */
+
+            background-color: #fffaf0; /* very light, creamy paper color */
+            padding: 1.8rem; /* increased padding */
+            border-radius: 1rem; /* rounded but not overly soft */
+            margin-bottom: 2rem; /* more space between sections */
+            border: 2px dashed #d4d4d4; /* dashed border for a cut-out effect */
+            transform: translateY(20px) rotate(calc(var(--rotation-deg, 0) * 1deg)); /* slight random rotation */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out, max-height 0.5s ease-in-out;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* softer but more diffused shadow */
+        }
+        .content-section.active {
+            opacity: 1;
+            transform: translateY(0) rotate(0deg); /* straighten when active */
+            max-height: 1200px; /* Arbitrary large value for content to expand */
+        }
+
+        /* Initially hide all but 'little-eckai-section' using JS, not just CSS */
+        /* This rule helps ensure non-active sections are truly hidden before JS takes over */
+        .content-section:not(.active) {
+            display: none; /* This will be toggled by JS when a section is clicked */
+        }
+
+        /* Override for 'little-eckai-section' to always show */
+        #little-eckai-section {
+            display: block !important;
+            opacity: 1 !important;
+            max-height: none !important;
+            transform: rotate(calc(var(--rotation-deg, 0) * 1deg)) !important; /* Maintain its random rotation */
+        }
+
+
+        /* mobile menu button */
+        .menu-button-mobile {
+            display: block; /* show on mobile */
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 50; /* above other content */
+            background-color: #a78bfa; /* subtle purple for contrast */
+            color: white;
+            padding: 0.6rem 1.2rem; /* larger button */
+            border-radius: 0.75rem; /* rounded */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+            font-weight: bold;
+            border: 1px solid #937ce2;
+        }
+
+        /* hide sidebar on mobile by default */
+        .sidebar {
+            display: none;
+        }
+
+        /* show sidebar when menu-open class is active */
+        .sidebar.menu-open {
+            display: block; /* block level on mobile */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 75%; /* mobile sidebar width */
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 40;
+            background-color: #fef5f6; /* very light background */
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-out;
+            border-right: 2px dashed #e0b0d6; /* dashed border for sidebar */
+        }
+        .sidebar.menu-open.active {
+            transform: translateX(0);
+        }
+
+        /* menu items - scrapbook style tabs/labels */
+        .menu-item {
+            background-color: #f7e0e9; /* light pastel pink */
+            color: #7b435f; /* deeper pink text */
+            border: 1px solid #f0c2d3; /* subtle border */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08); /* subtle lift */
+            font-weight: 600; /* slightly bolder */
+            letter-spacing: 0.025em; /* slight spacing */
+            transition: all 0.2s ease-in-out;
+            padding: 0.8rem 1rem;
+            border-radius: 0.75rem;
+        }
+        .menu-item:hover {
+            background-color: #f5d0e2; /* slightly darker on hover */
+            transform: translateY(-2px); /* lift effect */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+        }
+        .menu-item.active-menu-item {
+            background-color: #e0b0d6 !important; /* distinct active state */
+            color: #5c2c47 !important;
+            border-color: #c08aa9 !important;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.15); /* pressed in effect */
+            transform: translateY(0);
+        }
+
+        /* header specific styling for background images */
+        .header-image-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1; /* below text */
+            border-radius: inherit; /* inherit from header if set */
+        }
+        .header-image-container img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out; /* slower transition for soft fade */
+        }
+        .header-image-container img.active {
+            opacity: 1;
+        }
+        .header-content {
+            position: relative;
+            z-index: 2; /* above images */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* text shadow for readability */
+        }
+
+        /* Calligraphy Font Style */
+        .calligraphy-title {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        /* Rustic Roadway Font Style and responsiveness for font size */
+        .rustic-roadway-title {
+            font-size: 2.5rem; /* Default size for smaller screens */
+        }
+
+        @media (min-width: 640px) { /* sm breakpoint */
+            .rustic-roadway-title {
+                font-size: 3.5rem;
+            }
+        }
+
+        @media (min-width: 768px) { /* md breakpoint */
+            .rustic-roadway-title {
+                font-size: 4.5rem;
+            }
+        }
+
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .rustic-roadway-title {
+                font-size: 5.5rem;
+            }
+        }
+
+        @media (min-width: 1280px) { /* xl breakpoint */
+            .rustic-roadway-title {
+                font-size: 6.5rem; /* Larger for bigger screens */
+            }
+        }
+        /* New styles for polaroid strip and fairy lights */
+        .polaroid-strip {
+            position: relative;
+            background-color: #222; /* Dark background for contrast */
+            padding: 2rem 1rem;
+            border-radius: 1rem;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5); /* Inner shadow for depth */
+            display: flex;
+            flex-wrap: wrap; /* Allow polaroids to wrap to next line */
+            justify-content: center;
+            gap: 1.5rem; /* Space between polaroids */
+            overflow: hidden; /* Hide overflowing strip lights */
+        }
+
+        .strip-light {
+            position: absolute;
+            height: 5px; /* Thin strip light */
+            background: linear-gradient(90deg, transparent, #ffdd00, transparent); /* Yellow light */
+            opacity: 0.6;
+            animation: light-scan 4s infinite linear; /* Animation for the light */
+        }
+
+        .strip-light:nth-child(1) {
+            top: 0;
+            left: -100%;
+            width: 200%;
+            transform: rotate(-2deg);
+            animation-delay: 0s;
+        }
+
+        .strip-light:nth-child(2) {
+            bottom: 0;
+            right: -100%;
+            width: 200%;
+            transform: rotate(3deg);
+            animation-delay: 1.5s;
+            background: linear-gradient(90deg, transparent, #ff00ea, transparent); /* Pink light */
+        }
+
+        @keyframes light-scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Rubik's Cube Face Styling */
+        .rubiks-face-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns */
+            grid-template-rows: repeat(3, 1fr);    /* 3 rows */
+            gap: 5px; /* Spacing between squares */
+            width: 200px; /* Fixed width for the cube face */
+            height: 200px; /* Fixed height for the cube face */
+            background-color: #333; /* Dark background to mimic cube internal structure */
+            padding: 5px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            margin: 0 auto 1.5rem; /* Center and add bottom margin */
+        }
+
+        .rubiks-square {
+            width: 100%;
+            height: 100%;
+            background-color: #f8f8f8; /* Default white color */
+            border: 1px solid #ccc; /* Slight border for definition */
+            border-radius: 3px; /* Slightly rounded corners for stickers */
+            cursor: pointer;
+            transition: background-color 0.1s ease-in-out, transform 0.1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem; /* For debugging/numbering */
+            color: #666;
+            font-weight: bold;
+        }
+
+        .rubiks-square:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Light up effect for Rubik's squares */
+        .rubiks-square.light-up {
+            animation: rubiksLightUp 0.3s forwards;
+        }
+
+        @keyframes rubiksLightUp {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.08); filter: brightness(1.5); } /* Brighter and slightly larger */
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        /* Define specific colors for the squares during light-up for distinction */
+        .rubiks-square.highlight-red { background-color: #ef4444 !important; }
+        .rubiks-square.highlight-blue { background-color: #3b82f6 !important; }
+        .rubiks-square.highlight-green { background-color: #22c55e !important; }
+        .rubiks-square.highlight-yellow { background-color: #facc15 !important; }
+        .rubiks-square.highlight-orange { background-color: #f97316 !important; }
+        .rubiks-square.highlight-purple { background-color: #a855f7 !important; } /* Additional color if needed */
+
+        /* desktop layout adjustments */
+        @media (min-width: 768px) { /* md breakpoint */
+            .menu-button-mobile {
+                display: none; /* hide on desktop */
+            }
+            .sidebar {
+                display: block; /* always show on desktop */
+                flex-shrink: 0; /* prevent sidebar from shrinking */
+                width: 280px; /* slightly wider sidebar for more presence */
+                height: auto; /* allow height to adjust */
+                position: static; /* remove fixed positioning */
+                transform: translateX(0); /* remove transform */
+                box-shadow: none; /* remove shadow */
+                border-right: 2px dashed #e0b0d6; /* consistent dashed border */
+            }
+        }
+
+        /* Animations for the arrow */
+        @keyframes bounce-horizontal {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(-15px); /* Move left */
+            }
+        }
+
+        .animate-bounce-horizontal {
+            animation: bounce-horizontal 1.5s infinite;
+        }
+
+        @keyframes bounce-vertical {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px); /* Move up */
+            }
+        }
+
+        .animate-bounce-vertical {
+            animation: bounce-vertical 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-0">
+    <div class="confetti-container" id="confetti-container"></div>
+
+    <button id="mobile-menu-toggle" class="menu-button-mobile md:hidden lowercase">
+        menu
+    </button>
+
+    <header class="bg-rose-300 text-rose-800 p-4 md:p-6 text-center shadow-lg lowercase relative overflow-hidden" style="border-bottom: 2px dashed #f0c2d3; min-height: 180px; display: flex; align-items: center; justify-content: center; background-color: #F8C8DC;">
+        <div class="header-image-container" id="header-image-container">
+            
+        </div>
+        <div class="header-content">
+            <h1 class="font-extrabold rustic-roadway-title">happiest birthday, eckai! 🎉</h1>
+        </div>
+    </header>
+
+    <main class="flex flex-1 flex-col md:flex-row bg-white rounded-xl shadow-xl m-4 md:m-8 overflow-hidden" style="border: 2px dashed #f0c2d3;">
+        <aside id="sidebar" class="sidebar bg-rose-50 p-4 md:p-6">
+            <h2 class="text-2xl font-bold text-rose-700 mb-6 lowercase">menu</h2>
+            <nav>
+                <ul class="space-y-4">
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="my-message-section">
+                            my message
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="favorite-moments-section">
+                            favorite moments
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="dedicated-songs-section">
+                            song playlist
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="sweet-things-section">
+                            little things i love about you
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="open-gift-section">
+                            open your gift
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="her-favorites-section">
+                            her favorites
+                        </button>
+                    </li>
+                    
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="mini-game-section">
+                            mini game
+                        </button>
+                    </li>
+                    <li>
+                        <button class="menu-item w-full text-left lowercase" data-target="instagram-section">
+                            my instagram
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <div class="flex-1 p-4 md:p-8 relative z-20">
+            <div id="welcome-section" class="content-section active text-center" style="--rotation-deg: 0;">
+                <h3 class="text-xl md:text-2xl font-bold text-gray-700 mb-4 lowercase">
+                    click something on the menu
+                </h3>
+                <div class="flex flex-col items-center justify-center mt-8">
+                    <svg class="hidden md:block w-24 h-24 text-rose-500 animate-bounce-horizontal" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
+                    </svg>
+                    <svg class="block md:hidden w-20 h-20 text-rose-500 animate-bounce-vertical transform -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-8l-7 7-7-7"></path>
+                    </svg>
+                </div>
+                <p class="text-md md:text-lg text-gray-600 mt-4 lowercase">
+                    explore the sections to reveal more birthday surprises!
+                </p>
+            </div>
+
+            <div id="my-message-section" class="content-section mt-8" style="--rotation-deg: 1;">
+                <h3 class="text-xl md:text-2xl font-bold text-rose-700 mb-4 lowercase">my message:</h3>
+                <p class="text-lg md:text-xl text-gray-700 font-semibold lowercase">
+                    happiest birthday, my love!
+                    <br><br>
+                    i’m so proud of you, not just for surviving, but for continuing to show up every single day. you’re still here, doing your best, giving your energy and love to the world even when it gets heavy. i know that sometimes, life can be overwhelming and it feels easier to give up, but deep inside, i’ve always seen that fire in you. you fight, not because life is easy, but because you have something in you that wants to prove you’re capable of rising above it all.
+                    <br><br>
+                    you’ve told me before that you’re already content, that whenever the time comes, you can say you’ve lived your life. you’re studying, you have a family, you live a comfortable life, and you have me and chewie… and of course, coffee :) but even then, i hope you also learn to see life the way i do when i look at you, with so much potential, beauty, and reasons to stay. this world isn’t perfect, but i believe it's still full of moments worth living for. and i’m so happy.. so lucky.... that i get to love you in this life.
+                    <br><br>
+                    as you turn 19, i don’t wish for anything grand. just your genuine happiness. i hope you get to chase the dreams that light up your heart. i hope you wake up each day with a peaceful mind, a good health, and a heart that still dares to hope. i’m always here, babe. to cheer you on, to support you, even through the days when we argue about silly things. kahit mapikon ako minsan, i’ll always come back to love. and my love for you? it doesn’t go away. it grows, even in the quiet and chaotic moments.
+                    <br><br>
+                    thank you for letting me walk through life with you. i don’t know where destiny will take us, but i’ll always pray that wherever we end up, we are together, happy, and guided by the lord. i will always thank him for writing you into my story. may this birthday be light, joyful, and full of love. no birthday blues today, okay?
+                    <br><br>
+                    i love you :)) always. and your family too :)
+                </p>
+            </div>
+
+            <div id="favorite-moments-section" class="content-section mt-8" style="--rotation-deg: -2;">
+                <h3 class="text-xl md:text-2xl font-bold text-purple-700 mb-4 lowercase">our special moments:</h3>
+                <ul class="text-left text-lg md:text-xl text-gray-700 space-y-2 list-disc list-inside lowercase">
+                    <li>our first outside labas when we go to mcdonald’s sa fishermall HAHAHAHHAAH sobrang tagal natin naghintay ng order natin after mag-tap ng orders sa screen nila. without us knowing na hindi pala tayo nakapagbayad sa counter 😭 huhu help sobrang core talaga. kasi ang tagal natin naghintay tapos tumitingin pa tayo sa screen nila kung naka-serve na ba, pero ‘di pa pala tayo nagbabayad kasi nabusy kakakwento HAHAHAHAHAHAHA</li>
+                    <li>february :P officially loveteam nah HAHAHAHAHAHA sabi ko kapag nagkita tayo sa hallway tayo na. tapos nung pagpasok ko sa school, nakita na kita sabay tayo pumasok pero ‘di kita tinawag. so sa kabilang hagdan ka dumaan, ako naman sa kaliwa. so pagpanik natin sa 4th floor, nagkasalubungan tayo hehehehe like parang wattpad siya, early in the morning tapos nagkita tayo agad.</li>
+                    <li>idk what date na, pero this is the time na pumunta tayo sa dike sa bacog para tumambay tapos nag-uusap lang tayo tapos tawa lang nang tawa where I don't know anymore what's the reason. tapos kinukutuhan mo ko kahit wala ka namang nakakuha 😭 wala, it just feels so cute and so close at the same time. while watching the sun go down, I got to talk things about life with you.</li>
+                    <li>july 20, your birthday last yearrrr hehehe whole day ata tayo hindi nakapagusap kasi sobrang busy mo that time with the photoshoot and get ready para sa party at night. sobrang saya ko that day kasi after not talking to you the whole day, nakita kita, and I saw how you express your wings that day. kahit na alam ko hindi mo hilig yung mga ganong bagay, masaya ako for you, kasi that’s the time where you received messages from your loved ones. and i’m happy to have been able to give you the first bouquet I handmade just for you ;)) it was fulfilling. and after the day, I got to hug you and kiss you which made all the pagod go away.</li>
+                    <li>nothing beats the tambay sa bahay and just chilling. I will gising 9 or 10 para makapunta sa inyo nang maaga or minsan mas maaga pa para masulit yung buong araw ng magkasama. since mahirap makasakay ng navotas–recto, I’ll have to wait mga 20 mins sa sakayan para makasakay para tipid hehe. pero worth it naman kasi pagpanik ko sa inyo nakaabang ka na, nakangiti, and may sumasalubong na mga bulinggit and you waiting for a hug and kiss. buong araw is something that will always be treasured. those naps together feel so calming and safe. kapag magkasama tayo, palagi na lang inaantok HAHAHAHAHAHHA</li>
+                    <li>guzto, dunkin, kape kalinaw, 7 eleven, takoyaki, basta, mga kainang palaging pinupuntahan sa langaray after the day, kasi pag-uwi, magmemeryenda muna hehehe. foods are tastier and yummier when shared with you babe. and I love those little moments eating outside and sharing foods we love. thank you palagi sa libre hehe</li>
+                </ul>
+            </div>
+
+            <div id="dedicated-songs-section" class="content-section mt-8" style="--rotation-deg: 3;">
+                <h3 class="text-xl md:text-2xl font-bold text-red-700 mb-4 lowercase">songs just for you:</h3>
+                <ul class="text-left text-lg md:text-xl text-gray-700 space-y-2 list-disc list-inside lowercase">
+                    <li><a href="https://open.spotify.com/track/5o5rOj568TLbuwXvwA9WIZ?si=9dbd26353d5749ac" target="_blank" class="text-green-600 hover:underline">panata by tothapi</a></li>
+                    <li><a href="https://open.spotify.com/track/5DzcYyuk3GDTfv6LP961ZM?si=89d53d2adfca4c58" target="_blank" class="text-green-600 hover:underline">celeste by tothapi</a></li>
+                    <li><a href="https://open.spotify.com/track/5KgkdXVLUdh1B00WQIwrF0?si=1ed2f04edb684cae" target="_blank" class="text-green-600 hover:underline">ating dalawa by over october</a></li>
+                    <li><a href="https://open.spotify.com/track/3p0kdh6AMhQEblkIeamLth?si=7f8ac9ac059d4740" target="_blank" class="text-green-600 hover:underline">walang kapantay by the knobs</a></li>
+                    <li><a href="https://open.spotify.com/track/0ohOruprA894vVKYLHwPgc?si=285f5359374844f9" target="_blank" class="text-green-600 hover:underline">makasama by lucas miguel</a></li>
+                    <li><a href="https://open.spotify.com/track/5f9808hpiCpuNyqqdXmpF2?si=a3b09695cc2f4eaa" target="_blank" class="text-green-600 hover:underline">buwan by juan karlos</a></li>
+                    <li><a href="https://open.spotify.com/track/4g6QB9ktIdyEW5sIfcp71i?si=798007ea780c449b" target="_blank" class="text-green-600 hover:underline">dito sa'kin by earl agustin</a></li>
+                </ul>
+            </div>
+
+            <div id="sweet-things-section" class="content-section mt-8" style="--rotation-deg: -1;">
+                <h3 class="text-xl md:text-2xl font-bold text-orange-700 mb-4 lowercase">the little things i adore:</h3>
+                <ul class="text-left text-lg md:text-xl text-gray-700 space-y-2 list-disc list-inside lowercase">
+                    <li>the comfort of your presence</li>
+                    <li>your dimples that always appear when you smile</li>
+                    <li>your pisngi after you shower</li>
+                    <li>your scent from different fabric softeners</li>
+                    <li>your hugs during afternoon naps</li>
+                    <li>your love for music</li>
+                    <li>your love and patience for me</li>
+                    <li>just being next to you</li>
+                </ul>
+            </div>
+
+            <div id="open-gift-section" class="content-section mt-8 text-center" style="--rotation-deg: 2;">
+                <h3 class="text-xl md:text-2xl font-bold text-yellow-700 mb-4 lowercase">a warm hug for you!</h3>
+                <p class="text-lg md:text-xl text-gray-700 mb-6 lowercase">
+                    this gift isn't physical, but it's something i hope you'll feel...
+                </p>
+                <button id="reveal-gift-button" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-6 rounded-full shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-200 lowercase" style="border: 1px solid #eab308;">
+                    receive your hug
+                </button>
+                <p id="gift-promise" class="text-xl md:text-2xl text-yellow-800 font-extrabold mt-6 hidden lowercase transition-all duration-500 ease-in-out scale-0">
+                    A digital hug for you! 🤗
+                </p>
+            </div>
+
+            <div id="her-favorites-section" class="content-section mt-8" style="--rotation-deg: -3;">
+                <h3 class="text-xl md:text-2xl font-bold text-green-700 mb-4 lowercase">eckai's favorites:</h3>
+                <ul class="text-left text-lg md:text-xl text-gray-700 space-y-2 list-disc list-inside lowercase">
+                    <li>color: pink, green, and black</li>
+                    <li>food: sisig, sinigang na baboy, okra, potato corner, and japanese siomai from master siomai</li>
+                    <li>animal: chewie and cofi only (ayaw ng malaking aso 😅)</li>
+                    <li>artist: juan karlos, rosé, ed sheeran, 5 seconds of summer, john mayer, and justin bieber</li>
+                    <li>instrument: drums 😛 (but she can also play guitar, electric guitar, and bass!)</li>
+                    <li>character: spiderman & pochacco</li>
+                    <li>movie/series: 100 tula para kay stella, the breakup playlist, and any spiderman movie</li>
+                    <li>dream destinations: spain and greece 🌍</li>
+                </ul>
+                <p class="mt-4 text-md md:text-lg text-gray-600 lowercase">
+                    knowing these little things about you makes me love you even more!
+                </p>
+            </div>
+
+            
+            <div id="mini-game-section" class="content-section mt-8 text-center" style="--rotation-deg: 4;">
+                <h3 class="text-xl md:text-2xl font-bold text-indigo-700 mb-4 lowercase">rubik's challenge!</h3>
+                <p class="text-lg md:text-xl text-gray-700 mb-4 lowercase" id="game-message">
+                    click squares to light them up, or start a memory game!
+                </p>
+
+                <div class="rubiks-face-grid mb-6">
+                    <div class="rubiks-square" data-square-index="0"></div>
+                    <div class="rubiks-square" data-square-index="1"></div>
+                    <div class="rubiks-square" data-square-index="2"></div>
+                    <div class="rubiks-square" data-square-index="3"></div>
+                    <div class="rubiks-square" data-square-index="4"></div>
+                    <div class="rubiks-square" data-square-index="5"></div>
+                    <div class="rubiks-square" data-square-index="6"></div>
+                    <div class="rubiks-square" data-square-index="7"></div>
+                    <div class="rubiks-square" data-square-index="8"></div>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button id="start-game-btn" class="bg-indigo-400 hover:bg-indigo-500 text-indigo-900 font-bold py-3 px-8 rounded-full shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-indigo-200 lowercase" style="border: 1px solid #6366f1;">
+                        start memory game
+                    </button>
+                    <button id="repeat-sequence-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-700 font-bold py-3 px-8 rounded-full shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-gray-300 lowercase hidden" style="border: 1px solid #9ca3af;">
+                        repeat sequence
+                    </button>
+                    <button id="stop-game-btn" class="bg-red-400 hover:bg-red-500 text-red-900 font-bold py-3 px-8 rounded-full shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-red-200 lowercase hidden" style="border: 1px solid #ef4444;">
+                        stop game
+                    </button>
+                </div>
+            </div>
+
+            <div id="instagram-section" class="content-section mt-8 text-center" style="--rotation-deg: 5;">
+                <h3 class="text-xl md:text-2xl font-bold text-pink-700 mb-4 lowercase">check my profile to see my greetings to you:</h3>
+                <p class="text-lg md:text-xl text-gray-700 lowercase">
+                    <a href="https://www.instagram.com/chaezle/" target="_blank" class="text-blue-600 hover:underline">My Instagram Profile</a>
+                </p>
+            </div>
+            </div>
+    </main>
+
+    
+    <footer class="bg-rose-300 text-rose-800 p-4 md:p-6 text-center shadow-inner mt-auto lowercase" style="border-top: 2px dashed #f0c2d3;">
+        <p>with all my love, <br> your babe ❤️</p>
+        <p class="text-sm mt-2">© 2025. all rights reserved for eckai.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Confetti Logic ---
+            function createConfetti() {
+                const confettiContainer = document.getElementById('confetti-container');
+                if (!confettiContainer) return;
+
+                const numConfetti = 10;
+                for (let i = 0; i < numConfetti; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.classList.add('confetti');
+                    confetti.style.left = `${Math.random() * 100}vw`;
+                    confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                    confettiContainer.appendChild(confetti);
+                }
+            }
+
+            // Call confetti creation on page load
+            createConfetti();
+
+            // --- Header Image Carousel ---
+            const headerImages = document.querySelectorAll('#header-image-container img');
+            let currentImageIndex = 0;
+
+            function cycleHeaderImages() {
+                headerImages[currentImageIndex].classList.remove('active');
+                currentImageIndex = (currentImageIndex + 1) % headerImages.length;
+                headerImages[currentImageIndex].classList.add('active');
+            }
+
+            // --- Menu and Content Section Logic ---
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentSections = document.querySelectorAll('.content-section');
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+
+            // Function to show a specific content section and hide others
+            const showSection = (targetId) => {
+                contentSections.forEach(section => {
+                    if (section.id === targetId) {
+                        section.style.display = 'block'; // Make it visible for transition
+                        // Use a small timeout to ensure 'display: block' is applied before transition starts
+                        setTimeout(() => {
+                            section.classList.add('active');
+                        }, 10);
+                    } else {
+                        section.classList.remove('active'); // Trigger transition to max-height: 0, opacity: 0
+                        // After the transition, set display to none to remove it from layout
+                        setTimeout(() => {
+                            section.style.display = 'none';
+                        }, 500); // Should match the transition duration in CSS
+                    }
+                });
+
+                menuItems.forEach(item => {
+                    if (item.dataset.target === targetId) {
+                        item.classList.add('active-menu-item');
+                    } else {
+                        item.classList.remove('active-menu-item');
+                    }
+                });
+
+                // Close mobile menu after selection
+                if (sidebar.classList.contains('menu-open')) {
+                    sidebar.classList.remove('active');
+                    setTimeout(() => {
+                        sidebar.classList.remove('menu-open');
+                    }, 300); // Match transition duration
+                }
+            };
+
+            // Display the welcome section by default
+            showSection('welcome-section');
+
+            menuItems.forEach(item => {
+                item.addEventListener('click', (event) => {
+                    const targetId = event.target.dataset.target;
+                    showSection(targetId);
+                });
+            });
+
+            // Mobile menu toggle functionality
+            mobileMenuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('menu-open');
+                setTimeout(() => {
+                    sidebar.classList.toggle('active'); // Trigger slide animation
+                }, 10);
+            });
+
+            // Close sidebar when clicking outside (on desktop or if menu is open on mobile)
+            document.addEventListener('click', (event) => {
+                if (window.innerWidth >= 768) return; // Only for mobile
+                if (sidebar.classList.contains('menu-open') &&
+                    !sidebar.contains(event.target) &&
+                    !mobileMenuToggle.contains(event.target)) {
+                    sidebar.classList.remove('active');
+                    setTimeout(() => {
+                        sidebar.classList.remove('menu-open');
+                    }, 300);
+                }
+            });
+
+            // --- Gift Section Logic ---
+            const revealGiftButton = document.getElementById('reveal-gift-button');
+            const giftPromise = document.getElementById('gift-promise');
+
+            if (revealGiftButton) {
+                revealGiftButton.addEventListener('click', () => {
+                    giftPromise.classList.toggle('hidden');
+                    if (!giftPromise.classList.contains('hidden')) {
+                        setTimeout(() => {
+                            giftPromise.classList.remove('scale-0');
+                        }, 10); // Small delay to allow 'hidden' to be removed
+                    } else {
+                        giftPromise.classList.add('scale-0');
+                    }
+                });
+            }
+
+            // --- Rubik's Cube Mini-Game Logic ---
+            const rubiksSquares = document.querySelectorAll('.rubiks-square');
+            const startGameBtn = document.getElementById('start-game-btn');
+            const repeatSequenceBtn = document.getElementById('repeat-sequence-btn');
+            const stopGameBtn = document.getElementById('stop-game-btn');
+            const gameMessage = document.getElementById('game-message');
+
+            let sequence = [];
+            let playerSequence = [];
+            let level = 0;
+            let gameActive = false;
+            let inputAllowed = false;
+            const colors = ['highlight-red', 'highlight-blue', 'highlight-green', 'highlight-yellow', 'highlight-orange', 'highlight-purple'];
+
+            function getRandomColorClass() {
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            function lightUpSquare(square, colorClass, duration = 300) {
+                return new Promise(resolve => {
+                    square.classList.add('light-up', colorClass);
+                    setTimeout(() => {
+                        square.classList.remove('light-up', colorClass);
+                        resolve();
+                    }, duration);
+                });
+            }
+
+            async function playSequence() {
+                inputAllowed = false;
+                disableSquares();
+                gameMessage.textContent = `watch the sequence... level ${level + 1}`;
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Pause before sequence
+
+                for (const item of sequence) {
+                    const square = rubiksSquares[item.index];
+                    await lightUpSquare(square, item.color);
+                    await new Promise(resolve => setTimeout(resolve, 200)); // Pause between lights
+                }
+                gameMessage.textContent = 'your turn!';
+                inputAllowed = true;
+                enableSquares();
+            }
+
+            function addNewToSequence() {
+                const randomIndex = Math.floor(Math.random() * rubiksSquares.length);
+                const randomColor = getRandomColorClass();
+                sequence.push({ index: randomIndex, color: randomColor });
+            }
+
+            function startGame() {
+                gameActive = true;
+                level = 0;
+                sequence = [];
+                playerSequence = [];
+                gameMessage.textContent = 'starting game...';
+
+                startGameBtn.classList.add('hidden');
+                repeatSequenceBtn.classList.remove('hidden');
+                stopGameBtn.classList.remove('hidden');
+
+                nextRound();
+            }
+
+            function stopGame() {
+                gameActive = false;
+                sequence = [];
+                playerSequence = [];
+                level = 0;
+                inputAllowed = false;
+                gameMessage.textContent = 'click squares to light them up, or start a memory game!';
+                rubiksSquares.forEach(s => s.style.backgroundColor = ''); // Reset colors
+                rubiksSquares.forEach(s => s.classList.remove(...colors)); // Remove highlight classes
+
+                startGameBtn.classList.remove('hidden');
+                repeatSequenceBtn.classList.add('hidden');
+                stopGameBtn.classList.add('hidden');
+                enableSquares(); // Re-enable for free play
+            }
+
+            function nextRound() {
+                level++;
+                playerSequence = [];
+                addNewToSequence();
+                playSequence();
+            }
+
+            function handleSquareClick(event) {
+                const clickedSquare = event.target;
+                if (!gameActive) {
+                    // Free play mode
+                    const randomColor = getRandomColorClass();
+                    lightUpSquare(clickedSquare, randomColor, 200);
+                    return;
+                }
+
+                if (!inputAllowed) return;
+
+                const clickedIndex = parseInt(clickedSquare.dataset.squareIndex);
+                const expectedItem = sequence[playerSequence.length];
+
+                // Temporarily light up the clicked square with its expected color for feedback
+                lightUpSquare(clickedSquare, expectedItem.color, 150);
+
+                if (clickedIndex === expectedItem.index && clickedSquare.classList.contains(expectedItem.color)) {
+                    // This logic is a bit tricky with dynamic colors.
+                    // The 'contains' check for color might be flaky.
+                    // Better to just check the index and rely on the sequence's color.
+                    playerSequence.push({ index: clickedIndex, color: expectedItem.color }); // Store actual color clicked if needed, or just index
+                    if (playerSequence.length === sequence.length) {
+                        gameMessage.textContent = `level ${level} complete! good job!`;
+                        inputAllowed = false; // Disable input while processing
+                        setTimeout(nextRound, 1500);
+                    }
+                } else {
+                    gameMessage.textContent = `game over! you reached level ${level}.`;
+                    setTimeout(stopGame, 2000);
+                }
+            }
+
+            function disableSquares() {
+                rubiksSquares.forEach(square => square.disabled = true);
+            }
+
+            function enableSquares() {
+                rubiksSquares.forEach(square => square.disabled = false);
+            }
+
+            rubiksSquares.forEach(square => {
+                square.addEventListener('click', handleSquareClick);
+            });
+
+            startGameBtn.addEventListener('click', startGame);
+            repeatSequenceBtn.addEventListener('click', playSequence);
+            stopGameBtn.addEventListener('click', stopGame);
+
+            // Initial state for squares if no game is active (free play)
+            enableSquares();
+
+            console.log('Script fully loaded and executed.');
+        });
+    </script>
+</body>
+</html>
